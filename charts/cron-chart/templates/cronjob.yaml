@@ -38,7 +38,6 @@ spec:
             - name: {{ .Values.tmpVolumeMount.name }}
               emptyDir: { }
             {{- end }}
-            #test
             {{- if .Values.providedVolumeMount.create }}
             {{- range $k, $v := .Values.providedVolumeMount.folders }}
             - name: file-azure-{{ $v.name }}
