@@ -36,8 +36,8 @@ spec:
           volumes:
             - name: tmp
               emptyDir: {}
-            {{- if .Values.fileShare.create }}
-            {{- range $k, $v := .Values.fileShare.folders }}
+            {{- if .Values.providedVolumeMount.create }}
+            {{- range $k, $v := .Values.providedVolumeMount.folders }}
             - name: file-azure-{{ $v.name }}
               csi:
                 driver: file.csi.azure.com
@@ -48,7 +48,7 @@ spec:
                   mountOptions: {{ $v.mountOptions }}
             {{- end }}
             {{- end }}
-            {{- if or .Values.envSecret .Values.fileShare.create }}
+            {{- if or .Values.secretProvider.envSecrets .Values.providedVolumeMount.create }}
             - name: secrets-store-inline
               csi:
                 driver: secrets-store.csi.k8s.io
@@ -67,8 +67,8 @@ spec:
                     path: {{ $key }}
               {{- end }}
             {{- end }}
-            {{- if .Values.fileConfigExternals.create }}
-            {{- range $k, $v := .Values.fileConfigExternals.configMaps }}
+            {{- if .Values.externalConfigMap.create }}
+            {{- range $k, $v := .Values.externalConfigMap.configMaps }}
             - name: file-config-external-{{ $v.name }}
               configMap:
                 name: {{ $v.name }}
@@ -105,29 +105,31 @@ spec:
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
               volumeMounts:
-                - name: tmp
-                  mountPath: /tmp
-                {{- if or .Values.envSecret .Values.fileShare.create }}
+                {{- if .Values.tmpVolumeMount.create }}
+                - name: {{ .Values.tmpVolumeMount.name }}
+                  mountPath: {{ .Values.tmpVolumeMount.mountPath }}
+                {{- end }}
+                {{- if or .Values.secretProvider.envSecrets .Values.providedVolumeMount.create }}
                 - name: secrets-store-inline
                   mountPath: "/mnt/secrets-store"
                   readOnly: true
                 {{- end }}
-                {{- if .Values.fileConfig.create }}
-                {{- range $key, $val := .Values.fileConfig.files }}
+                {{- if .Values.configMapFromFile }}
+                {{- range $key, $val := .Values.configMapFromFile }}
                 - name: file-config
                   mountPath: "/mnt/file-config/{{ $key }}"
                   subPath: {{ $key }}
                   readOnly: true
                 {{- end }}
                 {{- end }}
-                {{- if .Values.fileShare.create }}
-                {{- range $k, $v := .Values.fileShare.folders }}
+                {{- if .Values.providedVolumeMount.create }}
+                {{- range $k, $v := .Values.providedVolumeMount.folders }}
                 - name: file-azure-{{ $v.name }}
                   mountPath: "/mnt/file-azure/{{ $v.name }}"
                 {{- end }}
                 {{- end }}
-                {{- if .Values.fileConfigExternals.create }}
-                {{- range $k, $v := .Values.fileConfigExternals.configMaps }}
+                {{- if .Values.externalConfigMap.create }}
+                {{- range $k, $v := .Values.externalConfigMap.configMaps }}
                 - name: file-config-external-{{ $v.name }}
                   mountPath: "/mnt/file-config-external/{{ $v.name }}/{{ $v.key }}"
                   subPath: {{ $v.key }}
@@ -136,7 +138,7 @@ spec:
                 {{- end }}
               env:
                 #secrets
-                {{- range $name, $value := .Values.envSecret }}
+                {{- range $name, $value := .Values.secretProvider.envSecrets }}
                 - name: {{ $name }}
                   valueFrom:
                     secretKeyRef:
