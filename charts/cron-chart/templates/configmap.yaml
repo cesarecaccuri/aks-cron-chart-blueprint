@@ -10,10 +10,7 @@ data:
   {{- if .Values.envConfig -}}
   {{- toYaml .Values.envConfig | nindent 2 }}
   {{- end }}
-  {{- if .Values.configMapFromFile -}}
-  {{- toYaml .Values.configMapFromFile | nindent 2 }}
-  {{- end }}
-  {{- end }}
+{{- end }}
 
 ---
 

@@ -34,8 +34,11 @@ spec:
           restartPolicy: Never
           terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
           volumes:
-            - name: tmp
-              emptyDir: {}
+            {{- if .Values.tmpVolumeMount.create }}
+            - name: {{ .Values.tmpVolumeMount.name }}
+              emptyDir: { }
+            {{- end }}
+            #test
             {{- if .Values.providedVolumeMount.create }}
             {{- range $k, $v := .Values.providedVolumeMount.folders }}
             - name: file-azure-{{ $v.name }}
@@ -48,7 +51,7 @@ spec:
                   mountOptions: {{ $v.mountOptions }}
             {{- end }}
             {{- end }}
-            {{- if or .Values.secretProvider.envSecrets .Values.providedVolumeMount.create }}
+            {{- if or .Values.secretProvider.create .Values.providedVolumeMount.create }}
             - name: secrets-store-inline
               csi:
                 driver: secrets-store.csi.k8s.io
@@ -56,13 +59,13 @@ spec:
                 volumeAttributes:
                   secretProviderClass: {{ include "cron-chart.fullname" $ }}
             {{- end }}
-            {{- if .Values.fileConfig.create }}
+            {{- if .Values.configMapFromFile }}
             - name: file-config
               configMap:
                 name: {{ include "cron-chart.fullname" $ }}
-                defaultMode: {{ .Values.fileConfig.fileMode }}
+                defaultMode: 420
                 items:
-              {{- range $key, $val := .Values.fileConfig.files }}
+              {{- range $key, $val := .Values.configMapFromFile }}
                   - key: {{ $key }}
                     path: {{ $key }}
               {{- end }}
@@ -109,7 +112,7 @@ spec:
                 - name: {{ .Values.tmpVolumeMount.name }}
                   mountPath: {{ .Values.tmpVolumeMount.mountPath }}
                 {{- end }}
-                {{- if or .Values.secretProvider.envSecrets .Values.providedVolumeMount.create }}
+                {{- if or .Values.secretProvider.create .Values.providedVolumeMount.create }}
                 - name: secrets-store-inline
                   mountPath: "/mnt/secrets-store"
                   readOnly: true
@@ -122,12 +125,6 @@ spec:
                   readOnly: true
                 {{- end }}
                 {{- end }}
-                {{- if .Values.providedVolumeMount.create }}
-                {{- range $k, $v := .Values.providedVolumeMount.folders }}
-                - name: file-azure-{{ $v.name }}
-                  mountPath: "/mnt/file-azure/{{ $v.name }}"
-                {{- end }}
-                {{- end }}
                 {{- if .Values.externalConfigMap.create }}
                 {{- range $k, $v := .Values.externalConfigMap.configMaps }}
                 - name: file-config-external-{{ $v.name }}
@@ -136,14 +133,22 @@ spec:
                   readOnly: true
                 {{- end }}
                 {{- end }}
+                {{- if .Values.providedVolumeMount.create }}
+                {{- range $k, $v := .Values.providedVolumeMount.folders }}
+                - name: file-azure-{{ $v.name }}
+                  mountPath: "/mnt/file-azure/{{ $v.name }}"
+                {{- end }}
+                {{- end }}
               env:
                 #secrets
+                {{- if .Values.secretProvider.create }}
                 {{- range $name, $value := .Values.secretProvider.envSecrets }}
                 - name: {{ $name }}
                   valueFrom:
                     secretKeyRef:
                       name: {{ include "cron-chart.fullname" $ }}
                       key: {{ $value }}
+                {{- end }}
                 {{- end }}
                 #configmap
                 {{- range $key, $val := .Values.envConfig }}

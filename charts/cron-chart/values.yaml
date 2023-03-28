@@ -69,6 +69,9 @@ secretProvider:
 # -- Environment config from k8s metadata
 envFieldRef: {}
 
+# -- Configure files to mount as config maps
+configMapFromFile: {}
+
 # -- File config pattern to mount
 fileConfig:
   create: false
