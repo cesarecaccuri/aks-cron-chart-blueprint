@@ -3,12 +3,12 @@ entries:
   cron-chart:
   - apiVersion: v2
     appVersion: 0.0.0
-    created: "2023-03-28T17:12:10.0923868+02:00"
+    created: "2023-03-28T18:34:22.3849229+02:00"
     description: A Helm chart for pagoPA cron
-    digest: 26e79fe38e7112ef3699dd0f4b94387095405b6ddc5af6bf3618fcd79a392eba
+    digest: c67c5729801f36f284a02a43c59b2ab5c01cbb93abc9a1f69d8de3a8a6877322
     name: cron-chart
     type: application
     urls:
     - https://cesarecaccuri.github.io/aks-cron-chart-blueprint/cron-chart-1.4.0.tgz
     version: 1.4.0
-generated: "2023-03-28T17:12:10.0913559+02:00"
+generated: "2023-03-28T18:34:22.3837264+02:00"
